@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/SinmFull/BMS_prj/internal/validator"
@@ -91,6 +92,7 @@ func (m UserModel) Insert(user *User) error {
 	if count > 0 {
 		return ErrDuplicateEmail
 	}
+	fmt.Println(count)
 
 	query := `
 	INSERT INTO users (name, email, password_hash, role)
@@ -99,6 +101,7 @@ func (m UserModel) Insert(user *User) error {
 
 	result, err := m.DB.ExecContext(ctx, query, args...)
 	if err != nil {
+		fmt.Println(err)
 		switch e := err.(type) {
 		case *mysql.MySQLError:
 			if e.Number == 1062 {

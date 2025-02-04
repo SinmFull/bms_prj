@@ -83,6 +83,7 @@ func (app *application) userLoginHandler(w http.ResponseWriter, r *http.Request)
 	valid, _ := user.Password.Matches(input.Password)
 	if !valid {
 		app.invalidAccountResponse(w, r)
+		return
 	}
 
 	token, err := app.models.Tokens.New(user.ID, 24*time.Hour, data.ScopeLogin)

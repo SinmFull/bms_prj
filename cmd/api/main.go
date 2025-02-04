@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/SinmFull/BMS_prj/internal/data"
@@ -80,8 +81,8 @@ func main() {
 }
 
 func openDB(cfg config) (*sql.DB, error) {
-
-	db, err := sql.Open("mysql", cfg.db.dsn)
+	dsn := strings.TrimPrefix(cfg.db.dsn, "mysql://")
+	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, err
 	}
