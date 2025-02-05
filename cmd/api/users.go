@@ -99,3 +99,40 @@ func (app *application) userLoginHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 }
+
+func (app *application) userLogoutHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Email string `json:"email"`
+	}
+	err := app.readJSON(w, r, &input)
+
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	v := validator.New()
+	v.Check(input.Email != "", "email", "email must be provided")
+
+	if !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	user, _ := app.models.Users.GetByEmail(input.Email)
+	if user == nil {
+		app.userNotFoundResponse(w, r)
+		return
+	}
+
+	err = app.models.Tokens.DeleteAllForUser(data.ScopeLogin, user.ID)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"message": "user logged out"}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
