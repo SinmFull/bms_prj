@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -18,6 +19,8 @@ var (
 	ErrDuplicateEmail = errors.New("duplicate email")
 )
 
+var AnonymousUser = &User{}
+
 type User struct {
 	ID        int64     `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
@@ -25,6 +28,10 @@ type User struct {
 	Email     string    `json:"email"`
 	Password  password  `json:"-"`
 	Role      UserRole  `json:"role"`
+}
+
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
 }
 
 type password struct {
@@ -92,7 +99,6 @@ func (m UserModel) Insert(user *User) error {
 	if count > 0 {
 		return ErrDuplicateEmail
 	}
-	fmt.Println(count)
 
 	query := `
 	INSERT INTO users (name, email, password_hash, role)
@@ -101,9 +107,9 @@ func (m UserModel) Insert(user *User) error {
 
 	result, err := m.DB.ExecContext(ctx, query, args...)
 	if err != nil {
-		fmt.Println(err)
 		switch e := err.(type) {
 		case *mysql.MySQLError:
+			fmt.Println(err)
 			if e.Number == 1062 {
 				return ErrDuplicateEmail
 			}
@@ -145,5 +151,41 @@ func (m UserModel) GetByEmail(email string) (*User, error) {
 			return nil, err
 		}
 	}
+	return &user, nil
+}
+
+func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error) {
+	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
+	query := `
+	SELECT users.id, users.created_at, users.name, users.email, users.password_hash, users.role
+	FROM users
+	INNER JOIN tokens
+	ON users.id = tokens.user_id
+	WHERE tokens.hash = ?
+	AND tokens.scope = ?
+	AND tokens.expiry > ?`
+
+	args := []interface{}{tokenHash[:], tokenScope, time.Now()}
+	var user User
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(
+		&user.ID,
+		&user.CreatedAt,
+		&user.Name,
+		&user.Email,
+		&user.Password.hash,
+		&user.Role,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+	// Return the matching user.
 	return &user, nil
 }

@@ -13,6 +13,11 @@ db/migrations/up: confirm
 	@echo 'Running up migrations...'
 	migrate -path ./migrations -database ${BMS_DB_DSN} up
 
+.PHONY: db/migrations/down
+db/migrations/down: confirm
+	@echo 'Running up migrations down...'
+	migrate -path ./migrations -database ${BMS_DB_DSN} down
+
 .PHONY: build/api
 build/api:
 	@echo 'Building cmd/api...'

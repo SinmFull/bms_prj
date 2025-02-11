@@ -14,6 +14,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		Name     string `json:"name"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
+		Role     string `json:"role"`
 	}
 	err := app.readJSON(w, r, &input)
 	if err != nil {
@@ -21,10 +22,16 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	defaultRole := "User"
+	role := input.Role
+	if role == "" {
+		role = defaultRole
+	}
+
 	user := &data.User{
 		Name:  input.Name,
 		Email: input.Email,
-		Role:  data.UserRole("User"),
+		Role:  data.UserRole(role),
 	}
 
 	err = user.Password.Set(input.Password)
@@ -49,6 +56,26 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		}
 		return
 	}
+
+	ug := &data.UserGroup{Name: user.Email}
+	if user.Role == "Admin" {
+		err = app.models.UserGroups.Create(ug)
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+		ugm := &data.UserGroupMembers{
+			UserID:  user.ID,
+			GroupId: ug.ID,
+			Role:    "admin",
+		}
+		err = app.models.UserGroupMembers.Insert(ugm)
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+	}
+
 	err = app.writeJSON(w, http.StatusCreated, envelope{"user": user}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
@@ -92,12 +119,11 @@ func (app *application) userLoginHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusCreated, envelope{"user": user, "authentication_token": token}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"user": user, "authentication_token": token}, nil)
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
-
 }
 
 func (app *application) userLogoutHandler(w http.ResponseWriter, r *http.Request) {
