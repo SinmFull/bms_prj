@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/SinmFull/BMS_prj/internal/validator"
@@ -109,7 +108,6 @@ func (m UserModel) Insert(user *User) error {
 	if err != nil {
 		switch e := err.(type) {
 		case *mysql.MySQLError:
-			fmt.Println(err)
 			if e.Number == 1062 {
 				return ErrDuplicateEmail
 			}

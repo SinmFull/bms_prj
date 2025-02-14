@@ -16,7 +16,7 @@ db/migrations/up: confirm
 .PHONY: db/migrations/down
 db/migrations/down: confirm
 	@echo 'Running up migrations down...'
-	migrate -path ./migrations -database ${BMS_DB_DSN} down
+	migrate -path ./migrations -database ${BMS_DB_DSN} force 4
 
 .PHONY: build/api
 build/api:

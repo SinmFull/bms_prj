@@ -22,11 +22,10 @@ func (app *application) addMemberToGroupHandler(w http.ResponseWriter, r *http.R
 	ug, _ = app.models.UserGroups.Get(user.Email)
 
 	member, err := app.models.Users.GetByEmail(input.Email)
-	if errors.Is(err, sql.ErrNoRows) {
+	if errors.Is(err, sql.ErrNoRows) || member == nil {
 		app.userNotFoundResponse(w, r)
 		return
 	}
-
 	ugm := &data.UserGroupMembers{
 		UserID:  member.ID,
 		GroupId: ug.ID,
