@@ -1,2 +1,0 @@
-database:
-  dsn: "root:fuxm0228.@tcp(localhost:3306)/bms?parseTime=true"
