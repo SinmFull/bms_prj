@@ -62,6 +62,6 @@ func (app *application) invalidAuthenticationTokenResponse(w http.ResponseWriter
 }
 
 func (app *application) notPermittedResponse(w http.ResponseWriter, r *http.Request) {
-	message := "your are not admin, can NOT add user for your group"
+	message := "your are not admin, do NOT have this permission"
 	app.errorResponse(w, r, http.StatusForbidden, message)
 }

@@ -33,6 +33,10 @@ func (app *application) addMemberToGroupHandler(w http.ResponseWriter, r *http.R
 	}
 	err = app.models.UserGroupMembers.Insert(ugm)
 	if err != nil {
+		if errors.Is(err, data.ErrAlreadyExists) {
+			app.badRequestResponse(w, r, err)
+			return
+		}
 		app.serverErrorResponse(w, r, err)
 		return
 	}
@@ -41,4 +45,28 @@ func (app *application) addMemberToGroupHandler(w http.ResponseWriter, r *http.R
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
+}
+
+func (a *application) getGroupMembersHandler(w http.ResponseWriter, r *http.Request) {
+	user := a.contextGetUser(r)
+	if user.IsAnonymous() {
+		a.invalidAuthenticationTokenResponse(w, r)
+		return
+	}
+	if user.Role != "Admin" {
+		a.notPermittedResponse(w, r)
+		return
+	}
+	ug, err := a.models.UserGroups.Get(user.Email)
+	if err != nil {
+		a.serverErrorResponse(w, r, err)
+		return
+	}
+
+	users, err := a.models.UserGroupMembers.GetMembers(*ug)
+	if err != nil {
+		a.serverErrorResponse(w, r, err)
+		return
+	}
+	a.writeJSON(w, http.StatusOK, envelope{"members": users}, nil)
 }
