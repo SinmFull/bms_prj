@@ -21,10 +21,11 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/v1/users/getMembers", app.requirePermission("Admin", app.getGroupMembersHandler))
 
 	router.HandlerFunc(http.MethodPost, "/v1/sensors/addSensorType", app.requirePermission("Admin", app.addSensorType))
+	router.HandlerFunc(http.MethodGet, "/v1/sensors/getSensorTypes", app.getSensorTypes)
 	router.HandlerFunc(http.MethodPost, "/v1/sensors/addSensorDevices", app.requirePermission("Admin", app.addOneSensorForBuilding))
 
 	router.HandlerFunc(http.MethodPost, "/v1/buildings/addBuilding", app.requirePermission("Admin", app.addNewBuilding))
 	router.HandlerFunc(http.MethodGet, "/v1/buildings/showBuildings", app.showBuildings)
-	router.HandlerFunc(http.MethodGet, "/v1/buildings/getSensors", app.getAllSensorsForOneBuilding)
+	router.HandlerFunc(http.MethodPost, "/v1/buildings/getSensors", app.getAllSensorsForOneBuilding)
 	return app.recoverPanic(app.enableCORS(app.authenticate(router)))
 }

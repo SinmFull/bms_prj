@@ -43,3 +43,24 @@ func (m SensorTypeModel) Insert(sensorType *SensorType) error {
 	sensorType.ID = id
 	return nil
 }
+
+func (m SensorTypeModel) GetAll() ([]*SensorType, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	query := `
+	SELECT id, name, unit
+	FROM sensor_types;`
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	sensorTypes := []*SensorType{}
+	for rows.Next() {
+		var sensorType SensorType
+		rows.Scan(&sensorType.ID, &sensorType.Name, &sensorType.Unit)
+		sensorTypes = append(sensorTypes, &sensorType)
+	}
+	return sensorTypes, nil
+}

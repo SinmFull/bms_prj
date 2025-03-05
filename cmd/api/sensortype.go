@@ -33,3 +33,17 @@ func (a *application) addSensorType(w http.ResponseWriter, r *http.Request) {
 	}
 	a.writeJSON(w, http.StatusCreated, envelope{"sensor_type": sensorType}, nil)
 }
+
+func (a *application) getSensorTypes(w http.ResponseWriter, r *http.Request) {
+	user := a.contextGetUser(r)
+	if user.IsAnonymous() {
+		a.invalidAuthenticationTokenResponse(w, r)
+		return
+	}
+	sensorTypes, err := a.models.SensorTypes.GetAll()
+	if err != nil {
+		a.serverErrorResponse(w, r, err)
+		return
+	}
+	a.writeJSON(w, http.StatusOK, envelope{"sensor_types": sensorTypes}, nil)
+}

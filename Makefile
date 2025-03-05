@@ -37,4 +37,4 @@ production/connect:
 .PHONY: production/deploy/api
 production/deploy/api:
 	rsync -rP --delete ./bin/linux_amd64/api ./migrations bms@${production_host_ip}:~
-	ssh -t bms@${production_host_ip} 'migrate -path ~/migrations -database $$BMS_DB_DSN up'
+	ssh -t bms@${production_host_ip} 'migrate -path ~/migrations -database ${BMS_DB_DSN} up'

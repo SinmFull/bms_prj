@@ -18,6 +18,15 @@ type SensorDeviceModel struct {
 	DB *sql.DB
 }
 
+type SensorDeviceWithTypeName struct {
+	ID             int64  `json:"id"`
+	BuildingID     int64  `json:"building_id"`
+	SensorTypeID   int64  `json:"sensor_type"`
+	SensorTypeName string `json:"sensor_type_name"`
+	Name           string `json:"name"`
+	Location       string `json:"location"`
+}
+
 func (m SensorDeviceModel) Insert(sensor *SensorDevice) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -38,24 +47,30 @@ func (m SensorDeviceModel) Insert(sensor *SensorDevice) error {
 	return nil
 }
 
-func (m SensorDeviceModel) GetAllForBuilding(buildingID int64) ([]SensorDevice, error) {
+func (m SensorDeviceModel) GetAllForBuilding(buildingID int64) ([]SensorDeviceWithTypeName, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	query := `
-	SELECT id, sensor_type_id, name, location
-	FROM sensor_devices;`
-	rows, err := m.DB.QueryContext(ctx, query)
+	SELECT sd.id, sd.building_id, sd.sensor_type_id, st.name AS sensor_type_name,
+	sd.name AS sensor_name, sd.location 
+	FROM sensor_devices sd
+	JOIN sensor_types st ON sd.sensor_type_id = st.id
+	WHERE sd.building_id = ?;`
+	rows, err := m.DB.QueryContext(ctx, query, buildingID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var sensors []SensorDevice
+	var sensors []SensorDeviceWithTypeName
+
 	for rows.Next() {
-		var s SensorDevice
+		var s SensorDeviceWithTypeName
 		err := rows.Scan(
 			&s.ID,
+			&s.BuildingID,
 			&s.SensorTypeID,
+			&s.SensorTypeName,
 			&s.Name,
 			&s.Location,
 		)
