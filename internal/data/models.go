@@ -17,6 +17,7 @@ type Models struct {
 	Buildings        BuildingModel
 	SensorTypes      SensorTypeModel
 	SensorDevices    SensorDeviceModel
+	SensorValue      SensorVaueModel
 }
 
 func NewModels(db *sql.DB) Models {
@@ -28,5 +29,6 @@ func NewModels(db *sql.DB) Models {
 		Buildings:        BuildingModel{DB: db},
 		SensorTypes:      SensorTypeModel{DB: db},
 		SensorDevices:    SensorDeviceModel{DB: db},
+		SensorValue:      SensorVaueModel{DB: db},
 	}
 }

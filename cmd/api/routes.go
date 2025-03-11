@@ -27,5 +27,8 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/buildings/addBuilding", app.requirePermission("Admin", app.addNewBuilding))
 	router.HandlerFunc(http.MethodGet, "/v1/buildings/showBuildings", app.showBuildings)
 	router.HandlerFunc(http.MethodPost, "/v1/buildings/getSensors", app.getAllSensorsForOneBuilding)
+
+	router.HandlerFunc(http.MethodPost, "/v1/sensorValues/getNewestSensorReading", app.getNewestSensorReading)
+	router.HandlerFunc(http.MethodGet, "/v1/sensorValues/getNewestForAllSensors", app.getNewestForAllSensors)
 	return app.recoverPanic(app.enableCORS(app.authenticate(router)))
 }

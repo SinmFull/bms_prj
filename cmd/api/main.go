@@ -10,6 +10,7 @@ import (
 
 	"github.com/SinmFull/BMS_prj/internal/data"
 	"github.com/SinmFull/BMS_prj/internal/jsonlog"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -21,12 +22,17 @@ type config struct {
 	db   struct {
 		dsn string
 	}
+	mqtt struct {
+		user     string
+		password string
+	}
 }
 
 type application struct {
-	config config
-	logger *jsonlog.Logger
-	models data.Models
+	config     config
+	logger     *jsonlog.Logger
+	models     data.Models
+	mqttClient mqtt.Client
 }
 
 func main() {
@@ -43,23 +49,35 @@ func main() {
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "MySQL DSN")
+	flag.StringVar(&cfg.mqtt.user, "mqtt-user", "admin", "MQTT user")
+	flag.StringVar(&cfg.mqtt.password, "mqtt-password", "qwe123456", "MQTT password")
+
 	flag.Parse()
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	db, err := openDB(cfg)
 	if err != nil {
-		// logger.Fatal(err)
 		logger.PrintFatal(err, nil)
 	}
 	defer db.Close()
 	logger.PrintInfo("database connection pool established", nil)
 
-	app := &application{
-		config: cfg,
-		logger: logger,
-		models: data.NewModels(db),
+	opts := mqtt.NewClientOptions().AddBroker("tcp://localhost:1883").SetUsername(cfg.mqtt.user).SetPassword(cfg.mqtt.password)
+	mqttClient := mqtt.NewClient(opts)
+
+	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
+		logger.PrintFatal(token.Error(), nil)
 	}
+
+	app := &application{
+		config:     cfg,
+		logger:     logger,
+		models:     data.NewModels(db),
+		mqttClient: mqttClient,
+	}
+
+	app.mqttClient.Subscribe("MQTT_RT_DATA", 0, app.mqttMessageHandler)
 
 	err = app.serve()
 	if err != nil {

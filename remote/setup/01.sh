@@ -25,6 +25,7 @@ rsync --archive --chown=${USERNAME}:${USERNAME} /root/.ssh /home/${USERNAME}
 ufw allow 22
 ufw allow 80/tcp
 ufw allow 443/tcp
+ufw allow 1883/tcp
 ufw --force enable
 
 apt --yes install fail2ban
