@@ -30,5 +30,12 @@ func (app *application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodPost, "/v1/sensorValues/getNewestSensorReading", app.getNewestSensorReading)
 	router.HandlerFunc(http.MethodGet, "/v1/sensorValues/getNewestForAllSensors", app.getNewestForAllSensors)
+
+	router.HandlerFunc(http.MethodPost, "/v1/sensorValues/getNewestSensorDailyReading", app.getNewestSensorDailyReading)
+
+	router.HandlerFunc(http.MethodGet, "/v1/sensorValues/exportCSV", app.exportCSVHandler)
+
+	router.HandlerFunc(http.MethodGet, "/v1/sensorValues/setDataFreq", app.setDataFreqHandler)
+
 	return app.recoverPanic(app.enableCORS(app.authenticate(router)))
 }

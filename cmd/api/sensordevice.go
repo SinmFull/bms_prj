@@ -9,6 +9,7 @@ import (
 func (a *application) addOneSensorForBuilding(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		BuildingID   int64  `json:"building_id"`
+		DeviceID     string `json:"device_id"`
 		SensorTypeID int64  `json:"sensor_type_id"`
 		Name         string `json:"name"`
 		Location     string `json:"location"`
@@ -20,11 +21,12 @@ func (a *application) addOneSensorForBuilding(w http.ResponseWriter, r *http.Req
 	}
 	sensor := &data.SensorDevice{
 		BuildingID:   input.BuildingID,
+		DeviceID:     input.DeviceID,
 		SensorTypeID: input.SensorTypeID,
 		Name:         input.Name,
 		Location:     input.Location,
 	}
-	err = a.models.SensorDevices.Insert(sensor)
+	err = a.models.SensorDevices.InsertWithTable(sensor)
 	if err != nil {
 		a.serverErrorResponse(w, r, err)
 		return

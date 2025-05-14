@@ -78,6 +78,8 @@ func main() {
 	}
 
 	app.mqttClient.Subscribe("MQTT_RT_DATA", 0, app.mqttMessageHandler)
+	app.mqttClient.Subscribe("MQTT_ENY_NOW", 0, app.mqttMinuteMessageHandler)
+	app.mqttClient.Subscribe("MQTT_DAY_DATA", 0, app.mqttDayMessageHandler)
 
 	err = app.serve()
 	if err != nil {

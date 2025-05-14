@@ -40,7 +40,25 @@ sudo mysql -e "CREATE USER 'bms'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';"
 sudo mysql -e "GRANT ALL PRIVILEGES ON bms.* TO 'bms'@'localhost';"
 sudo mysql -e "FLUSH PRIVILEGES;"
 
-echo "BMS_DB_DSN='mysql://bms:${DB_PASSWORD}@localhost/bms'" >> /etc/environment
+echo "BMS_DB_DSN='mysql://root:${DB_PASSWORD}@localhost/bms'" >> /etc/environment
+
+# Install and configure MQTT server
+apt --yes install mosquitto mosquitto-clients
+
+# Create password file for MQTT
+sudo touch /etc/mosquitto/passwd
+sudo mosquitto_passwd -b /etc/mosquitto/passwd admin qwe123456
+
+# Configure MQTT
+sudo cat > /etc/mosquitto/conf.d/default.conf << EOF
+allow_anonymous false
+password_file /etc/mosquitto/passwd
+listener 1883
+EOF
+
+# Restart MQTT service
+systemctl restart mosquitto
+systemctl enable mosquitto
 
 apt --yes install -y debian-keyring debian-archive-keyring apt-transport-https
 curl -L https://dl.cloudsmith.io/public/caddy/stable/gpg.key | sudo apt-key add -

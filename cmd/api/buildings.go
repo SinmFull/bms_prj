@@ -8,6 +8,14 @@ import (
 )
 
 func (app *application) addNewBuilding(w http.ResponseWriter, r *http.Request) {
+
+	//Get the user id from the request context
+	admin := app.contextGetUser(r)
+	if admin.IsAnonymous() {
+		app.invalidAuthenticationTokenResponse(w, r)
+		return
+	}
+
 	var input struct {
 		Name     string `json:"name"`
 		Location string `json:"location"`
@@ -26,8 +34,6 @@ func (app *application) addNewBuilding(w http.ResponseWriter, r *http.Request) {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
-
-	admin := app.contextGetUser(r)
 
 	//Get the group id by email of admin
 	ug, _ := app.models.UserGroups.Get(admin.Email)
